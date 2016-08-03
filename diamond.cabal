@@ -1,0 +1,31 @@
+name:                diamond
+version:             0.0.0.1
+synopsis:            Confluence REST API using Servant
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Jost Berthold
+maintainer:          jost.berthold@cba.com.au
+-- copyright:           
+-- category:            
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Text.Web.Diamond
+                       Text.Web.Diamond.API
+  -- other-modules:       
+  -- other-extensions:    
+  build-depends:       base >=4.9 && < 5,
+                       servant >= 0.7,
+                       servant-client >= 0.7,
+                       containers >= 0.5,
+                       transformers >= 0.5,
+                       aeson >= 0.11,
+                       http-client >= 0.4,
+                       text >= 1.2,
+                       bytestring >= 0.10
+                       
+  hs-source-dirs:      src
+  default-language:    Haskell2010
