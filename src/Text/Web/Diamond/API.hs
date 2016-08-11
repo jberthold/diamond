@@ -16,6 +16,8 @@ import GHC.Generics
 import Servant.API
 import Servant.Client
 
+import Text.Web.Diamond.Types
+
 type ConfluenceAPI =
   "rest" :> "api" :> (
     -- AuditAPI :<|> -- auditing changes
@@ -48,9 +50,3 @@ type SearchAPI =
 
 type UserAPI = ContentAPI
   
--- types, to go to a type module
-data SearchResult =
-  SearchResult {
-               }
-  deriving (Eq, Read, Show, Generic)
-
