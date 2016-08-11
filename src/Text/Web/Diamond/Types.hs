@@ -84,3 +84,26 @@ instance ToJSON   CfPerson
 -- | Time representation for Confluence JSON. Example value
 -- "2016-08-11T11:35:18.951+10:00"
 type CfTime = Text
+
+------------------------------------------------------------
+-- Request data
+
+-- | Page creation and update
+data CfPageBody =
+  CfPageBody { title     :: Text  -- ^ page title, mandatory! also for updates
+             , ancestors :: [Int] -- ^ IDs, possibly empty (no parents)
+             , space     :: Maybe (Either Text Int) -- ^ space, by key or ID
+             , body :: Text         -- ^ will be in storage.value
+             , version :: Maybe Int -- ^ number, needs increment on update
+             }
+  deriving (Eq, Read, Show, Generic)
+
+instance FromJSON CfPageBody where
+  parseJSON (Object o)
+    = error "special cases for space, ancestors, body, version"
+instance ToSON CfPageBody where
+  toJSON CfPageBody{..}
+    = error "special cases for space, ancestors, body, version"
+
+-- TODO convenience functionality
+-- updatePage iD (newTitle, newAncestors, newContent) = GET iD >>= PUT . updateCfPageBody...
