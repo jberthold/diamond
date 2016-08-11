@@ -12,6 +12,7 @@ module Text.Web.Diamond.Types
 import Data.Text(Text)
 import Data.Aeson.Types
 import GHC.Generics
+import Data.Maybe
 
 -- dummy for now, not sure if we will ever implement it
 data SearchResult =
@@ -60,7 +61,6 @@ data CfVersion =
             , minorEdit :: Bool
             } deriving (Eq, Read, Show, Generic)
 
-
 instance FromJSON CfVersion
 instance ToJSON   CfVersion
 
@@ -93,17 +93,50 @@ data CfPageBody =
   CfPageBody { title     :: Text  -- ^ page title, mandatory! also for updates
              , ancestors :: [Int] -- ^ IDs, possibly empty (no parents)
              , space     :: Maybe (Either Text Int) -- ^ space, by key or ID
-             , body :: Text         -- ^ will be in storage.value
-             , version :: Maybe Int -- ^ number, needs increment on update
+             , body      :: Text         -- ^ will be in storage.value
+             , version   :: Maybe Int -- ^ number, needs increment on update
              }
   deriving (Eq, Read, Show, Generic)
 
 instance FromJSON CfPageBody where
   parseJSON (Object o)
-    = error "special cases for space, ancestors, body, version"
-instance ToSON CfPageBody where
+    = do title     <- o .: "title"
+         ancestors <- mapM ( .: "id") =<< o .: "ancestors"
+         let spaceId (Object space') =
+                 do key <- space' .:? "key"
+                    iD  <- space' .:? "id"
+                    return $ case (key, iD) of
+                               (_, Just n) -> Just (Right n) -- prefer iD
+                               (Just k, _) -> Just (Left k)
+                               other       -> Nothing
+         space    <- maybe (return Nothing) spaceId =<< o .:? "space"
+         version  <- maybe (return Nothing) (.: "number") =<< o .:? "version"
+         -- we should actually check that "representation": "storage" was given
+         body     <- (.: "value") =<< (.: "storage") =<< o .: "body"
+         return CfPageBody{..}
+
+instance ToJSON CfPageBody where
   toJSON CfPageBody{..}
-    = error "special cases for space, ancestors, body, version"
+    = object $
+      [ "type"      .= string "page"
+      , "title"     .= title
+      , "ancestors" .= [ object [ "id" .= n] | n <- ancestors ]
+      , "body"      .= object [ "representation" .= string "storage"
+                              , "storage" .= body
+                              ]
+      ]
+      ++ catMaybes
+      [ "space"     .=? fmap mkSpace space
+      , "version"   .=? fmap mkVersion version
+      ]
+      where mkSpace :: Either Text Int -> Pair
+            mkSpace (Left key) = "key" .= key
+            mkSpace (Right iD) = "id"  .= iD
+            mkVersion :: Int -> Pair
+            mkVersion n = "version" .= object ["number" .= n ]
+            string = Data.Aeson.Types.String
+
+(.=?) field  = fmap (\mx -> field .= mx)
 
 -- TODO convenience functionality
 -- updatePage iD (newTitle, newAncestors, newContent) = GET iD >>= PUT . updateCfPageBody...
