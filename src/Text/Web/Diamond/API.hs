@@ -21,32 +21,53 @@ import Text.Web.Diamond.Types
 type ConfluenceAPI =
   "rest" :> "api" :> (
     -- AuditAPI :<|> -- auditing changes
-    ContentAPI :<|> 
     -- GroupAPI :<|> -- user group operations
     -- longtask :<|> -- API for LongTaskService (?)
-    SearchAPI :<|>   -- only one search method
+    -- SearchAPI :<|>   -- only one search method
     -- SpaceAPI :<|>    -- spaces and their key/value property stores 
     -- TemplateAPI :<|> -- content templates
-    UserAPI
+    -- UserAPI :<|>  -- user management
+    ContentAPI
     )
 
 -- | Content has sub-APIS for child, child/attachment, descendant, label,
 -- property, restriction, version, blueprint
-type ContentAPI =
-  "this" :> "is" :> "much" :> "stuff" :> Get '[JSON] ()
-  -- TODO
+-- We implement a minimal subset geared towards creating and updating pages
+-- with a fixed parent page, and listing existing content
+type ContentAPI = QueryAPI       -- list and read content
+                  :<|> UpdateAPI -- update or create pages
 
--- | The search interface uses the "Confluence Query Language" cql
-type SearchAPI =
-  "search" :> QueryParam "cql" Text :>
-              QueryParam "cqlcontext" Text :>
-              QueryParam "excerpt" Text :>
-              QueryParam "expand" Text :>
-              QueryParam "start" Int :>
-              QueryParam "limit" Int :>
-              QueryParam "includeArchivedSpace" Bool :>
-              Get '[JSON] [SearchResult]
-
-
-type UserAPI = ContentAPI
   
+type QueryAPI =
+  "content" :> (
+                QueryParam "type" CfContentType -- {page, blogpost}
+                :> QueryParam "spaceKey" Text
+                :> QueryParam "title" Text  -- page title to search for
+                                            -- required if type=page
+                :> QueryParam "postingDay" Text -- as name suggests yyyy-mm-dd
+                                                -- required if type=blogpost
+--                :> QueryParam "start" Int -- for pagination
+--                :> QueryParam "limit" Int -- for pagination
+--                :> QueryParam "expand" [Text] -- details to provide UNUSED
+--                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
+                :> Get '[JSON] CfResponse
+    :<|> 
+                Capture "id" Int
+                :> QueryParam "version" Int -- latest if not provided
+--                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
+--                :> QueryParam "expand" [Text] -- details to provide UNUSED
+                :> Get '[JSON] CfResponse
+               )
+
+type UpdateAPI =
+  "content" :>
+  (             -- create a new page
+                ReqBody '[JSON] CfPageBody
+--                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
+--                :> QueryParam "expand" [Text] -- details to provide UNUSED
+                :> Post '[JSON] CfResponse
+   :<|>         -- update an existing page
+                Capture "contentId" Int
+                :> ReqBody '[JSON] CfPageBody
+                :> Put '[JSON] CfResponse
+  )

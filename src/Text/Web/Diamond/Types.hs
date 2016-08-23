@@ -140,3 +140,20 @@ instance ToJSON CfPageBody where
 
 -- TODO convenience functionality
 -- updatePage iD (newTitle, newAncestors, newContent) = GET iD >>= PUT . updateCfPageBody...
+
+-- support types
+
+-- | Confluence content type (for query): "page" or "blogpost".
+data CfContentType = Page | Blogpost
+                   deriving (Eq, Generic)
+instance Show CfContentType where
+  show Page     = "page"
+  show Blogpost = "blogpost"
+
+instance Read CfContentType where
+  readsPrec _ ('p':'a':'g':'e':rest)                 = [(Page, rest)]
+  readsPrec _ ('b':'l':'o':'g':'p':'o':'s':'t':rest) = [(Blogpost, rest)]
+  readsPrec _ other = []
+
+instance ToJSON CfContentType
+instance FromJSON CfContentType
