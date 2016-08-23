@@ -56,8 +56,8 @@ type CfObject = Object
 data CfVersion =
   CfVersion { by   :: CfPerson
             , when :: CfTime
-            , message   :: Text
             , number    :: Int
+            , message   :: Maybe Text
             , minorEdit :: Bool
             } deriving (Eq, Read, Show, Generic)
 
@@ -91,9 +91,9 @@ type CfTime = Text
 -- | Page creation and update
 data CfPageBody =
   CfPageBody { title     :: Text  -- ^ page title, mandatory! also for updates
-             , ancestors :: [Int] -- ^ IDs, possibly empty (no parents)
+             , ancestors :: [Int] -- ^ IDs, possibly empty (optional)
              , space     :: Maybe (Either Text Int) -- ^ space, by key or ID
-             , body      :: Text         -- ^ will be in storage.value
+             , body      :: Text      -- ^ will be in storage.value
              , version   :: Maybe Int -- ^ number, needs increment on update
              }
   deriving (Eq, Read, Show, Generic)
@@ -101,7 +101,7 @@ data CfPageBody =
 instance FromJSON CfPageBody where
   parseJSON (Object o)
     = do title     <- o .: "title"
-         ancestors <- mapM ( .: "id") =<< o .: "ancestors"
+         ancestors <- maybe (return []) (mapM ( .: "id")) =<< o .:? "ancestors"
          let spaceId (Object space') =
                  do key <- space' .:? "key"
                     iD  <- space' .:? "id"
