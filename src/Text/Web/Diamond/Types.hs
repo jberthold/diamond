@@ -9,10 +9,12 @@
 module Text.Web.Diamond.Types
        where
 
-import Data.Text(Text)
+import Data.Text(Text, pack, unpack)
 import Data.Aeson.Types
 import GHC.Generics
 import Data.Maybe
+
+import Web.HttpApiData
 
 -- dummy for now, not sure if we will ever implement it
 data SearchResult =
@@ -138,22 +140,19 @@ instance ToJSON CfPageBody where
 
 (.=?) field  = fmap (\mx -> field .= mx)
 
--- TODO convenience functionality
--- updatePage iD (newTitle, newAncestors, newContent) = GET iD >>= PUT . updateCfPageBody...
-
 -- support types
 
 -- | Confluence content type (for query): "page" or "blogpost".
 data CfContentType = Page | Blogpost
-                   deriving (Eq, Generic)
-instance Show CfContentType where
-  show Page     = "page"
-  show Blogpost = "blogpost"
+                   deriving (Eq, Generic, Read, Show)
 
-instance Read CfContentType where
-  readsPrec _ ('p':'a':'g':'e':rest)                 = [(Page, rest)]
-  readsPrec _ ('b':'l':'o':'g':'p':'o':'s':'t':rest) = [(Blogpost, rest)]
-  readsPrec _ other = []
+instance ToJSON CfContentType where
+  toJSON = String . showTextData
+instance FromJSON CfContentType where
+  parseJSON (String s) = either (fail . unpack) return $ readTextData s
+  parseJSON other      = typeMismatch "String" other
 
-instance ToJSON CfContentType
-instance FromJSON CfContentType
+instance ToHttpApiData CfContentType where
+  toUrlPiece    = showTextData
+instance FromHttpApiData CfContentType where
+  parseUrlPiece = readTextData

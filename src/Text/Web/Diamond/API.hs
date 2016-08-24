@@ -12,31 +12,40 @@ module Text.Web.Diamond.API
 import Data.Text(Text)
 import Data.Aeson.Types
 import GHC.Generics
+import Data.Proxy
 
 import Servant.API
 import Servant.Client
 
 import Text.Web.Diamond.Types
 
+-- | The Confluence API is very rich, but we only implement a small subset of
+-- the content API (for a specific use). Commented code prepares for
+-- implementing more.
 type ConfluenceAPI =
   "rest" :> "api" :> (
-    -- AuditAPI :<|> -- auditing changes
-    -- GroupAPI :<|> -- user group operations
-    -- longtask :<|> -- API for LongTaskService (?)
-    -- SearchAPI :<|>   -- only one search method
-    -- SpaceAPI :<|>    -- spaces and their key/value property stores 
-    -- TemplateAPI :<|> -- content templates
-    -- UserAPI :<|>  -- user management
     ContentAPI
+    -- :<|> AuditAPI -- auditing changes
+    -- :<|> GroupAPI -- user group operations
+    -- :<|> longtask -- API for LongTaskService (?)
+    -- :<|> SearchAPI   -- only one search method
+    -- :<|> SpaceAPI    -- spaces and their key/value property stores 
+    -- :<|> TemplateAPI -- content templates
+    -- :<|> UserAPI  -- user management
     )
+-- matching out a related client
+contentClient -- :<|> more APIs
+  = client (Proxy :: Proxy ConfluenceAPI)
 
 -- | Content has sub-APIS for child, child/attachment, descendant, label,
--- property, restriction, version, blueprint
+-- property, restriction, version, blueprint.
 -- We implement a minimal subset geared towards creating and updating pages
--- with a fixed parent page, and listing existing content
+-- with a fixed parent page, and listing existing content. Structure is
+-- different from the original documentation
 type ContentAPI = QueryAPI       -- list and read content
                   :<|> UpdateAPI -- update or create pages
 
+quClient :<|> updClient = contentClient
   
 type QueryAPI =
   "content" :> (
@@ -59,6 +68,8 @@ type QueryAPI =
                 :> Get '[JSON] CfResponse
                )
 
+cfList :<|> cfGet = quClient
+
 type UpdateAPI =
   "content" :>
   (             -- create a new page
@@ -71,3 +82,5 @@ type UpdateAPI =
                 :> ReqBody '[JSON] CfPageBody
                 :> Put '[JSON] CfResponse
   )
+
+cfCreate :<|> cfUpdate = updClient
