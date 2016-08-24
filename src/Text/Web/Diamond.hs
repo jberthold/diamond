@@ -22,28 +22,31 @@ import Network.HTTP.Client (Manager, newManager, defaultManagerSettings)
 
 
 -- | Confluence Interaction type
-type Confluence a = BaseUrl -> ExceptT ServantError IO a
+type Confluence a = (BasicAuthData, BaseUrl) -> ExceptT ServantError IO a
 
 -- TODO convenience functionality
 
 -- | list of pages for a space (optional), returning titles and IDs (as Int)
 list    :: Maybe Text -> Confluence [(Text, Int)]
-list space baseUrl = undefined
+list space = \(auth, baseUrl) -> do
+  undefined
 
 -- | reading a page (returns the page title and body)
 getPage :: Int -> Confluence (Text, Text)
-getPage iD = undefined
+getPage iD =  \(auth, baseUrl) -> do
+  undefined
 
 -- | create a page, optionally as a child of another page. Returns newly
 -- created page ID as Int
 createPage :: Text -> Text -> Maybe Int -> Confluence Int
-createPage title body parent = undefined
+createPage title body parent =  \(auth, baseUrl) -> do
+  undefined
 
 -- | update a page: may update title, parent, and/or body
 -- To implement this, the page will be read and then updated, using previous
 -- information unless updated.
 updatePage :: Int -> Maybe Text -> Maybe Int -> Maybe Text -> Confluence ()
-updatePage iD newTitle newAncestors newContent
-  = undefined-- GET iD >>= PUT . updateCfPageBody..
+updatePage iD newTitle newAncestors newContent = \(auth, baseUrl) -> do
+  undefined-- GET iD >>= PUT . updateCfPageBody..
 
 

@@ -19,6 +19,11 @@ import Servant.Client
 
 import Text.Web.Diamond.Types
 
+
+-- | Authentication header. Would be great to place it top-level but then it
+-- would be much harder to get to the client functions via pattern matching.
+type Auth = BasicAuth "no-realm-known" ()
+
 -- | The Confluence API is very rich, but we only implement a small subset of
 -- the content API (for a specific use). Commented code prepares for
 -- implementing more.
@@ -48,8 +53,8 @@ type ContentAPI = QueryAPI       -- list and read content
 quClient :<|> updClient = contentClient
   
 type QueryAPI =
-  "content" :> (
-                QueryParam "type" CfContentType -- {page, blogpost}
+  "content" :> (Auth
+                :> QueryParam "type" CfContentType -- {page, blogpost}
                 :> QueryParam "spaceKey" Text
                 :> QueryParam "title" Text  -- page title to search for
                                             -- required if type=page
@@ -61,7 +66,8 @@ type QueryAPI =
 --                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
                 :> Get '[JSON] CfResponse
     :<|> 
-                Capture "id" Int
+                Auth
+                :> Capture "id" Int
                 :> QueryParam "version" Int -- latest if not provided
 --                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
 --                :> QueryParam "expand" [Text] -- details to provide UNUSED
@@ -71,16 +77,17 @@ type QueryAPI =
 cfList :<|> cfGet = quClient
 
 type UpdateAPI =
-  "content" :>
-  (             -- create a new page
-                ReqBody '[JSON] CfPageBody
+  "content" :> ( -- create a new page
+                Auth
+                :> ReqBody '[JSON] CfPageBody
 --                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
 --                :> QueryParam "expand" [Text] -- details to provide UNUSED
                 :> Post '[JSON] CfResponse
    :<|>         -- update an existing page
-                Capture "contentId" Int
+                Auth
+                :> Capture "contentId" Int
                 :> ReqBody '[JSON] CfPageBody
                 :> Put '[JSON] CfResponse
-  )
+               )
 
 cfCreate :<|> cfUpdate = updClient
