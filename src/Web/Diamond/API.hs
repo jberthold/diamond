@@ -6,7 +6,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Text.Web.Diamond.API
+module Web.Diamond.API
        where
 
 import Data.Text(Text)
@@ -17,7 +17,7 @@ import Data.Proxy
 import Servant.API
 import Servant.Client
 
-import Text.Web.Diamond.Types
+import Web.Diamond.Types
 
 
 -- | Authentication header. Would be great to place it top-level but then it

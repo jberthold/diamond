@@ -6,7 +6,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Text.Web.Diamond.Types
+module Web.Diamond.Types
        where
 
 import Data.Text(Text, pack, unpack)

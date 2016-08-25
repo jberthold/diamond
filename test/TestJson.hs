@@ -17,7 +17,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as B
 import          System.FilePath
 
-import Text.Web.Diamond.Types
+import Web.Diamond.Types
 
 tests :: IO [Test]
 tests = return [ wildJsonParsing ]

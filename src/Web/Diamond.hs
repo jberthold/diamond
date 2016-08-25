@@ -3,11 +3,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Text.Web.Diamond
+module Web.Diamond
   where
 
-import Text.Web.Diamond.API
-import Text.Web.Diamond.Types
+import Web.Diamond.API
+import Web.Diamond.Types
 
 import           Data.Text(Text)
 import qualified Data.Text as T
