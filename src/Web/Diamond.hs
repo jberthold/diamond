@@ -12,25 +12,35 @@ import Web.Diamond.Types
 import           Data.Text(Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Data.ByteString.Char8 as B
+
+import Data.Aeson
+import Network.HTTP.Client (Manager, newManager, defaultManagerSettings)
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
+import Control.Monad.IO.Class
 
 import Servant.Client
 import Servant.API
 
-import Control.Monad.Trans.Except (ExceptT, runExceptT)
-import Data.Aeson
-import Network.HTTP.Client (Manager, newManager, defaultManagerSettings)
+import System.IO
+import Control.Exception
+
 
 
 -- | Confluence Interaction type
 type Confluence a = (BasicAuthData, BaseUrl) -> ExceptT ServantError IO a
+ -- TODO use ReaderT?
 
 -- TODO convenience functionality
 
 -- | list of pages for a space (optional), returning titles and IDs (as Int)
 list    :: Maybe Text -> Confluence [(Text, Int)]
 list space = \(auth, baseUrl) -> do
-  undefined
-
+  mgr   <- liftIO $ newManager defaultManagerSettings
+  -- (auth, baseUrl) <- ask -- TODO use ReaderT?
+  answer <- cfList auth (Just Page) space Nothing Nothing mgr baseUrl
+  return [ (title, read (T.unpack id)) | CfResponse{..} <- results answer ]
+  
 -- | reading a page (returns the page title and body)
 getPage :: Int -> Confluence (Text, Text)
 getPage iD =  \(auth, baseUrl) -> do
@@ -50,3 +60,24 @@ updatePage iD newTitle newAncestors newContent = \(auth, baseUrl) -> do
   undefined-- GET iD >>= PUT . updateCfPageBody..
 
 
+mkAuth :: IO BasicAuthData
+mkAuth = do putStr "User: "
+            basicAuthUsername <- B.getLine
+            if (B.null basicAuthUsername)
+              then fail "empty user"
+              else do putStr "Password: "
+                      basicAuthPassword <- B.pack <$> getPassword
+                      return BasicAuthData{..}
+
+getPassword :: IO String
+getPassword = do
+  putStr "Password: "
+  hFlush stdout
+  pass <- withEcho False getLine
+  putChar '\n'
+  return pass
+
+withEcho :: Bool -> IO a -> IO a
+withEcho echo action = do
+  old <- hGetEcho stdin
+  bracket_ (hSetEcho stdin echo) (hSetEcho stdin old) action
