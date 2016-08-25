@@ -64,7 +64,7 @@ type QueryAPI =
 --                :> QueryParam "limit" Int -- for pagination
 --                :> QueryParam "expand" [Text] -- details to provide UNUSED
 --                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
-                :> Get '[JSON] CfResponse
+                :> Get '[JSON] CfResponseList
     :<|> 
                 Auth
                 :> Capture "id" Int

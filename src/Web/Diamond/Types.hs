@@ -30,17 +30,18 @@ data CfResponse = CfResponse
     -- , type :: CfType -- very inconvenient name. Not required for now...
   , status :: Text -- ^ status of content (often "current")
   , title  :: Text -- ^ title of content
-  , space :: CfObject    -- ^ containing Conf.space, stored as JSON Object
-  , history :: CfObject  -- ^ editing metadata (original creator + time etc)
-  , version :: CfVersion -- ^ current version information (incl. number!)
+  , version :: Maybe CfVersion -- ^ current version information (incl. number)
+                               -- not present in CfResponseList
 
--- , extensions :: CfObject -- ^ unclear what this is for
+--  , extensions :: CfObject -- ^ unclear what this is for
   , _links      :: CfObject -- ^ links related to the returned ID
   , _expandable :: CfObject -- ^ more details (must be requested by
                             -- "?expand=item1,item2,..."), not implemented
-
+    -- expandable things, missing in the CfResponseList for rest/api/content
+    --  , space :: Maybe CfObject    -- ^ containing Conf.space
+    --  , history :: Maybe CfObject  -- ^ editing metadata (creator, time etc)
 -- editing (updating) a page returned additionally 
-    --  , ancestors :: [ CfObject ] -- ^ "hierarchy" (or is it? :-) between things
+    --  , ancestors :: [ CfObject ] -- ^ hierarchy (or is it? :-) between things
     --  , container :: CfObject -- ^ the containing space
     --  , body :: CfObject -- ^ contains "storage" and "_expandable"
   } deriving (Eq, Read, Show, Generic)
@@ -52,6 +53,19 @@ instance FromJSON CfResponse
 -- fields we won't be interested in. anything important or perceived as
 -- reasonably stable in Confluence should become a specific type.
 type CfObject = Object
+
+-- | list (including size and pagination information) of CfResponse items,
+-- used in content listing. Some expandable fields not present in this response
+data CfResponseList = CfResponseList
+  { results :: [ CfResponse ]
+  , start   :: Int
+  , limit   :: Int
+  , size    :: Int
+  , _links  :: CfObject
+  } deriving (Eq, Read, Show, Generic)
+
+instance ToJSON CfResponseList
+instance FromJSON CfResponseList
 
 ----------------------------------------
 -- | version information for confluence things

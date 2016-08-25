@@ -28,6 +28,8 @@ wildJsonParsing = testGroup "parsing JSON collected in the wild"
       resource "requestbodies.json" `canParseAs` (undefined :: CfPageBody)
     , testProperty "parse responses" $
       resource "responses.json" `canParseAs` (undefined :: CfResponse)
+    , testProperty "parse response lists" $
+      resource "responselists.json" `canParseAs` (undefined :: CfResponseList)
     ]
 
 resource :: FilePath -> FilePath
