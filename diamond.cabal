@@ -25,6 +25,7 @@ library
                        transformers >= 0.5,
                        aeson >= 0.11,
                        http-client >= 0.4,
+                       http-client-tls >= 0.2,
                        http-api-data >= 0.2,
                        text >= 1.2,
                        bytestring >= 0.10

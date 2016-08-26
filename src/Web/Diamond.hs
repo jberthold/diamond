@@ -15,7 +15,9 @@ import qualified Data.Text.IO as T
 import qualified Data.ByteString.Char8 as B
 
 import Data.Aeson
-import Network.HTTP.Client (Manager, newManager, defaultManagerSettings)
+import Network.HTTP.Client (Manager, newManager)
+import Network.HTTP.Client.TLS(tlsManagerSettings)
+
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class
 
@@ -36,7 +38,7 @@ type Confluence a = (BasicAuthData, BaseUrl) -> ExceptT ServantError IO a
 -- | list of pages for a space (optional), returning titles and IDs (as Int)
 list    :: Maybe Text -> Confluence [(Text, Int)]
 list space = \(auth, baseUrl) -> do
-  mgr   <- liftIO $ newManager defaultManagerSettings
+  mgr   <- liftIO $ newManager tlsManagerSettings
   -- (auth, baseUrl) <- ask -- TODO use ReaderT?
   answer <- cfList auth (Just Page) space Nothing Nothing mgr baseUrl
   return [ (title, read (T.unpack id)) | CfResponse{..} <- results answer ]
