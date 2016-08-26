@@ -66,16 +66,9 @@ mkAuth = do putStr "User: "
             if (B.null basicAuthUsername)
               then fail "empty user"
               else do putStr "Password: "
-                      basicAuthPassword <- B.pack <$> getPassword
+                      basicAuthPassword <- withEcho False B.getLine
+                      putChar '\n'
                       return BasicAuthData{..}
-
-getPassword :: IO String
-getPassword = do
-  putStr "Password: "
-  hFlush stdout
-  pass <- withEcho False getLine
-  putChar '\n'
-  return pass
 
 withEcho :: Bool -> IO a -> IO a
 withEcho echo action = do
