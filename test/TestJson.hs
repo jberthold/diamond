@@ -42,3 +42,9 @@ file `canParseAs` thing = monadicIO $
              let content :: Either String [a]
                  content = A.eitherDecode json
              assert (isRight content)
+
+roundTripJson :: forall a . (A.ToJSON a, A.FromJSON a, Eq a) => a -> Bool
+roundTripJson dat = isRight answer && dat == dat'
+  where answer     = (A.eitherDecode . A.encode) dat
+        Right dat' = answer 
+       

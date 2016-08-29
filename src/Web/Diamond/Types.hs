@@ -43,7 +43,7 @@ data CfResponse = CfResponse
 -- editing (updating) a page returned additionally 
     --  , ancestors :: [ CfObject ] -- ^ hierarchy (or is it? :-) between things
     --  , container :: CfObject -- ^ the containing space
-  , body :: Maybe CfResponseBody -- ^ page body within "body.storage.value"
+  , body :: Maybe CfBody -- ^ page body within "body.storage.value"
   } deriving (Eq, Read, Show, Generic)
 
 instance ToJSON CfResponse
@@ -56,19 +56,19 @@ type CfObject = Object
 
 -- | optional page body in a response (need to request "body.storage" to
 -- expand it in a cfGet). Similar but not equal to body in a request :-)
-data CfResponseBody = CfResponseBody { content :: Text }
+data CfBody = CfBody { content :: Text }
      deriving (Eq, Read, Show, Generic)
 
-instance ToJSON CfResponseBody where
-  toJSON CfResponseBody{..} =
+instance ToJSON CfBody where
+  toJSON CfBody{..} =
     object [ "storage" .= object [ "representation" .= string "storage"
                                  , "value" .= content
                                  ]
            ]
     where string = Data.Aeson.Types.String
 
-instance FromJSON CfResponseBody where
-  parseJSON (Object o) = CfResponseBody <$>
+instance FromJSON CfBody where
+  parseJSON (Object o) = CfBody <$>
                          -- could check "representation": "storage"
                          ((.: "value") =<< o .: "storage")
   parseJSON other      = typeMismatch "page body object" other
@@ -127,9 +127,10 @@ type CfTime = Text
 data CfPageBody =
   CfPageBody { title     :: Text  -- ^ page title, mandatory! also for updates
              , ancestors :: [Int] -- ^ IDs, possibly empty (optional)
-             , space     :: Maybe (Either Text Int) -- ^ space, by key or ID
-             , body      :: Text      -- ^ will be in storage.value
-             , version   :: Maybe Int -- ^ number, needs increment on update
+             , space     :: Maybe (Either Text Int) -- ^ space by key or ID
+                                                    -- Required when creating
+             , body      :: CfBody    -- ^ page body in storage.value
+             , version   :: Maybe Int -- ^ number, required (needs inc) on update
              }
   deriving (Eq, Read, Show, Generic)
 
@@ -146,8 +147,7 @@ instance FromJSON CfPageBody where
                                other       -> Nothing
          space    <- maybe (return Nothing) spaceId =<< o .:? "space"
          version  <- maybe (return Nothing) (.: "number") =<< o .:? "version"
-         -- we should actually check that "representation": "storage" was given
-         body     <- (.: "value") =<< (.: "storage") =<< o .: "body"
+         body <- o .: "body"
          return CfPageBody{..}
 
 instance ToJSON CfPageBody where
@@ -155,20 +155,19 @@ instance ToJSON CfPageBody where
     = object $
       [ "type"      .= string "page"
       , "title"     .= title
-      , "ancestors" .= [ object [ "id" .= n] | n <- ancestors ]
-      , "body"      .= object [ "representation" .= string "storage"
-                              , "storage" .= body
-                              ]
+      , "body"      .= body
       ]
       ++ catMaybes
       [ "space"     .=? fmap mkSpace space
-      , "version"   .=? fmap mkVersion version
+      , "version"   .=? fmap (object . mkVersion) version
+      , "ancestors" .=? if null ancestors then Nothing
+                        else Just [ object [ "id" .= n] | n <- ancestors ]
       ]
       where mkSpace :: Either Text Int -> Pair
             mkSpace (Left key) = "key" .= key
             mkSpace (Right iD) = "id"  .= iD
-            mkVersion :: Int -> Pair
-            mkVersion n = "version" .= object ["number" .= n ]
+            mkVersion :: Int -> [Pair]
+            mkVersion n = [ "number" .= n ]
             string = Data.Aeson.Types.String
 
 (.=?) field  = fmap (\mx -> field .= mx)
