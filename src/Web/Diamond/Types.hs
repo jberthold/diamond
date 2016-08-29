@@ -43,7 +43,7 @@ data CfResponse = CfResponse
 -- editing (updating) a page returned additionally 
     --  , ancestors :: [ CfObject ] -- ^ hierarchy (or is it? :-) between things
     --  , container :: CfObject -- ^ the containing space
-    --  , body :: CfObject -- ^ contains "storage" and "_expandable"
+  , body :: Maybe CfResponseBody -- ^ page body within "body.storage.value"
   } deriving (Eq, Read, Show, Generic)
 
 instance ToJSON CfResponse
@@ -53,6 +53,25 @@ instance FromJSON CfResponse
 -- fields we won't be interested in. anything important or perceived as
 -- reasonably stable in Confluence should become a specific type.
 type CfObject = Object
+
+-- | optional page body in a response (need to request "body.storage" to
+-- expand it in a cfGet). Similar but not equal to body in a request :-)
+data CfResponseBody = CfResponseBody { content :: Text }
+     deriving (Eq, Read, Show, Generic)
+
+instance ToJSON CfResponseBody where
+  toJSON CfResponseBody{..} =
+    object [ "storage" .= object [ "representation" .= string "storage"
+                                 , "value" .= content
+                                 ]
+           ]
+    where string = Data.Aeson.Types.String
+
+instance FromJSON CfResponseBody where
+  parseJSON (Object o) = CfResponseBody <$>
+                         -- could check "representation": "storage"
+                         ((.: "value") =<< o .: "storage")
+  parseJSON other      = typeMismatch "page body object" other
 
 -- | list (including size and pagination information) of CfResponse items,
 -- used in content listing. Some expandable fields not present in this response

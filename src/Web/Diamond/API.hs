@@ -19,7 +19,6 @@ import Servant.Client
 
 import Web.Diamond.Types
 
-
 -- | Authentication header. Would be great to place it top-level but then it
 -- would be much harder to get to the client functions via pattern matching.
 type Auth = BasicAuth "no-realm-known" ()
@@ -69,8 +68,8 @@ type QueryAPI =
                 Auth
                 :> Capture "id" Int
                 :> QueryParam "version" Int -- latest if not provided
+                :> QueryParams "expand" Text -- details to provide (need "body")
 --                :> QueryParam "status" [CfStatus] -- {current, trashed, any}
---                :> QueryParam "expand" [Text] -- details to provide UNUSED
                 :> Get '[JSON] CfResponse
                )
 

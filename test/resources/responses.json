@@ -374,5 +374,49 @@
     "descendants": "/rest/api/content/215477075/descendant"
   }
 }
-
+    ,
+{
+  "id": "199037127",
+  "type": "page",
+  "status": "current",
+  "title": "edited",
+  "body": {
+    "storage": {
+      "value": "<div><div class=\"myystyle\">This is another edit, using a scoped in-body style</div></div>",
+      "representation": "storage",
+      "_expandable": {
+        "content": "/rest/api/content/199037127"
+      }
+    },
+    "_expandable": {
+      "editor": "",
+      "view": "",
+      "export_view": "",
+      "styled_view": "",
+      "anonymous_export_view": ""
+    }
+  },
+  "extensions": {
+    "position": "none"
+  },
+  "_links": {
+    "webui": "/display/~SundaSh/edited",
+    "tinyui": "/x/xxDdCw",
+    "collection": "/rest/api/content",
+    "base": "https://confluence.prod.cba",
+    "context": "",
+    "self": "https://confluence.prod.cba/rest/api/content/199037127"
+  },
+  "_expandable": {
+    "container": "/rest/api/space/~SundaSh",
+    "metadata": "",
+    "operations": "",
+    "children": "/rest/api/content/199037127/child",
+    "history": "/rest/api/content/199037127/history",
+    "ancestors": "",
+    "version": "",
+    "descendants": "/rest/api/content/199037127/descendant",
+    "space": "/rest/api/space/~SundaSh"
+  }
+}
 ]

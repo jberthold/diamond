@@ -46,7 +46,9 @@ list space = \(auth, baseUrl) -> do
 -- | reading a page (returns the page title and body)
 getPage :: Int -> Confluence (Text, Text)
 getPage iD =  \(auth, baseUrl) -> do
-  undefined
+  mgr   <- liftIO $ newManager tlsManagerSettings
+  CfResponse{..} <- cfGet auth iD Nothing ["body.storage"] mgr baseUrl
+  return (title, maybe (error "no body received") content body)
 
 -- | create a page, optionally as a child of another page. Returns newly
 -- created page ID as Int
