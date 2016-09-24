@@ -1,4 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeApplications #-}
 
 module TestJson where
 
@@ -25,19 +27,19 @@ tests = return [ wildJsonParsing ]
 wildJsonParsing :: Test
 wildJsonParsing = testGroup "parsing JSON collected in the wild"
     [ testProperty "parse request bodies" $
-      resource "requestbodies.json" `canParseAs` (undefined :: CfPageBody)
+      canParseAs @CfPageBody     $ resource "requestbodies.json"
     , testProperty "parse responses" $
-      resource "responses.json" `canParseAs` (undefined :: CfResponse)
-    , testProperty "parse response lists" $
-      resource "responselists.json" `canParseAs` (undefined :: CfResponseList)
+      canParseAs @CfResponse     $ resource "responses.json"
+    , testProperty "parse response lists again" $
+      canParseAs @CfResponseList $ resource "responselists.json"
     ]
 
 resource :: FilePath -> FilePath
 resource = ("test" </>) . ("resources" </>)
 
--- Using a lame type argument trick: we won't actually use the thing
-canParseAs :: forall a . A.FromJSON a => FilePath -> a -> Property
-file `canParseAs` thing = monadicIO $
+-- using a type argument
+canParseAs :: forall a . A.FromJSON a => FilePath -> Property
+canParseAs file = monadicIO $
           do json <- liftIO $ B.readFile file
              let content :: Either String [a]
                  content = A.eitherDecode json
